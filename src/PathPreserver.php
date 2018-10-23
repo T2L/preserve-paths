@@ -87,9 +87,10 @@ class PathPreserver
 
             // Check if any path may be affected by modifying the install path.
             $relevantPaths = array();
+            $projectRoot = $this->filesystem->normalizePath(getcwd());
             foreach ($this->preservePaths as $path) {
                 $normalizedPath = $this->filesystem->normalizePath($path);
-                if (static::fileExists($path) && strpos($normalizedPath, $installPathNormalized) === 0) {
+                if (static::fileExists($normalizedPath, $projectRoot) && strpos($normalizedPath, $installPathNormalized) === 0) {
                     $relevantPaths[] = $normalizedPath;
                 }
             }
@@ -126,10 +127,11 @@ class PathPreserver
             return;
         }
 
+        $projectRoot = $this->filesystem->normalizePath(getcwd());
         foreach ($this->backups as $original => $backupLocation) {
             // Remove any code that was placed by the package at the place of
             // the original path.
-            if (static::fileExists($original)) {
+            if (static::fileExists($original, $projectRoot)) {
                 if (is_dir($original)) {
                     $this->filesystem->emptyDirectory($original, false);
                     $this->filesystem->removeDirectory($original);
@@ -167,6 +169,8 @@ class PathPreserver
      *
      * @param string $path
      *   The path as in file_exists()
+     * @param string $projectRoot
+     *   Project root path (folder with composer.json file)
      *
      * @return bool
      *   Returns TRUE if file exists, like in file_exists(),
@@ -174,18 +178,17 @@ class PathPreserver
      *
      * @see file_exists()
      */
-    public static function fileExists($path)
+    public static function fileExists($path, $projectRoot)
     {
 
       // Get all parent directories.
         $folders = array();
         $resetPerms = array();
         $folder = $path;
-        $project_root = getcwd();
         while ($folder = dirname($folder)) {
             if ($folder === '.' || $folder === '/' || preg_match("/^.:\\\\$/", $folder)) {
                 break;
-            } elseif ($folder === $project_root) {
+            } elseif ($folder === $projectRoot) {
                 $folders[] = $folder;
                 break;
             } elseif ($folder === '') {
