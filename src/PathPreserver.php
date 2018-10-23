@@ -181,8 +181,12 @@ class PathPreserver
         $folders = array();
         $resetPerms = array();
         $folder = $path;
+        $project_root = getcwd();
         while ($folder = dirname($folder)) {
             if ($folder === '.' || $folder === '/' || preg_match("/^.:\\\\$/", $folder)) {
+                break;
+            } elseif ($folder === $project_root) {
+                $folders[] = $folder;
                 break;
             } elseif ($folder === '') {
                 continue;
